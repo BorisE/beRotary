@@ -14,6 +14,13 @@
    turning on the pull-ups saves having to hook up resistors
    to the A & B channel outputs
  * ****************************************************************************************************************
+ * v 2.0 [2021/02/21]
+ *  - push button events (short and long)
+ *  - some logic for encoder changed
  * v 1.0 [2021/02/21]
  *  - first release
  * ****************************************************************************************************************
+ 
+ HOW TO USE
+ 
+ 
