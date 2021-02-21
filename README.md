@@ -3,7 +3,7 @@
  *                                 ROTARY ENCODER FOR MENU
  *                            private library by Boris Emchenko
  * ****************************************************************************************************************
-   some great ideas were taken from https://playground.arduino.cc/Main/RotaryEncoders/#Example12
+   some great ideas were taken from https://playground.arduino.cc/Main/RotaryEncoders/
    also many thanks to all folks from https://forum.arduino.cc
    
    Read a rotary encoder with interrupt
@@ -16,3 +16,4 @@
  * ****************************************************************************************************************
  * v 1.0 [2021/02/21]
  *  - first release
+ * ****************************************************************************************************************

@@ -2,11 +2,12 @@
  *                                 ROTARY ENCODER FOR MENU
  *                            private library by Boris Emchenko
  * ****************************************************************************************************************
-   read a rotary encoder with interrupt
-   Encoder hooked up with common to GROUND,
-   encoderPinA to pin D3, encoderPinB to pin D4 (D2 not working as intterupt so can)
+   some great ideas were taken from https://playground.arduino.cc/Main/RotaryEncoders/
+   also many thanks to all folks from https://forum.arduino.cc
+   
+   Read a rotary encoder with interrupt
    it doesn't matter which encoder pin you use for A or B
-   but pinA should support interrupt
+   but pinA should support interrupts
 
    uses Arduino pull-ups on A & B channel outputs
    turning on the pull-ups saves having to hook up resistors
@@ -14,7 +15,7 @@
  * ****************************************************************************************************************
  * v 1.0 [2021/02/21]
  *  - first release
- * 
+ * ****************************************************************************************************************
  */
 
 #define DEBOUNCE_INTERVAL 2                         // debounce interval
@@ -31,17 +32,14 @@ public:
   
   rotaryClass();                                					// constructor
   rotaryClass(uint8_t pinA, uint8_t pinB);      					// constructor with encoder pin initialization
-  rotaryClass(uint8_t pinA, uint8_t pinB, uint8_t pushPin);			// constructor with encoder and push button pin initialization
 
   void setInterrupt(uint8_t pinA, uint8_t pinB);  					// set pins after initialization (not need if using constructor with pin initialization)
-  void setInterrupt(uint8_t pinA, uint8_t pinB, uint8_t pushPin);  	// set pins after initialization (not need if using constructor with pin initialization)
 
   int checkEncoder();                             					// run this method in loop to check for encoder move events
 
 private:
   uint8_t encoderPinA;
   uint8_t encoderPinB;
-  uint8_t encoderPushPin;
  
   unsigned long currenttime, lastIncTime;
 
