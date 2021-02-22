@@ -13,6 +13,9 @@
    turning on the pull-ups saves having to hook up resistors
    to the A & B channel outputs
  * ****************************************************************************************************************
+ * v 2.0A [2021/02/22]
+ *  - many many bugfixes
+ *  - set parameters method
  * v 2.0 [2021/02/21]
  *  - push button events (short and long)
  *  - some logic for encoder changed
@@ -20,13 +23,14 @@
  *  - first release
  * ****************************************************************************************************************
  */
+#ifndef beRotary_h
+#define beRotary_h
 
-#define DEBOUNCE_INTERVAL 2                             // debounce interval
-#define SPEEDLIMIT_INTERVAL 100                         // speedlimit (if you move faster encoder will not count)
+#define ROTARY_DEBOUNCE_INTERVAL_DEFAULT 2                             // debounce interval
+#define ROTARY_SPEEDLIMIT_INTERVAL_DEFAULT 100                         // speedlimit (if you move faster encoder will not count)
 
-#define BUTTON_LONGPRESS_DELAY  500                     // How long to wait before long press is fired
-#define BUTTON_DEBOUNCE_DELAY   20                      // Debounce delay (how long to wait before short press is fired)
-
+#define BUTTON_DEBOUNCE_DELAY_DEFAULT   20                      // Debounce delay (how long to wait before short press is fired)
+#define BUTTON_LONGPRESS_DELAY_DEFAULT  500                     // How long to wait before long press is fired
 
 #include "Arduino.h"
 
@@ -50,7 +54,17 @@ public:
   int checkEncoder();                             					// run this method in loop to check for encoder move events
   int checkButton();												// run this method in loop to check for encoder push button events
 
+  boolean debugOutput;												// enables/disables debug output
+  
+  unsigned long  RotaryDebounceInterval;							// sets debounce interval for rotary (2ms is usually enough)
+  unsigned long  RotarySpeedLimit;									// sets speed limit, to contol how fast encoder can flash rotation events
+  unsigned long  ButtonDebounceInterval;							// sets debounce interval for push button on encodery 
+  unsigned long  ButtonLongpressInterval;							// sets long press duration
+  void setParameters(unsigned long RotaryDebounce, unsigned long  SpeedLimit, unsigned long  ButtonDebounce, unsigned long  ButtonLongpress);                        // run this method to change default parameters
+
 private:
+  void init(void);
+  
   uint8_t encoderPinA;												// stores channel A pin
   
   uint8_t encoderPinB;												// stores channel B pin
@@ -67,10 +81,12 @@ private:
   static void ICACHE_RAM_ATTR doEncoderA(void);						// interrupt for channel A
   
   static volatile boolean button_Active;							// flag for marking push button event
+  static volatile boolean button_Press;               				// flag for marking press button event
   static volatile boolean button_Release;							// flag for marking release button event
-  static volatile unsigned long button_Timer;  						// saving millis for push button event
+  static volatile unsigned long button_Timer;						// saving millis for push button event
   static boolean button_longPressActive;							// flag for marking long push button event
 
   static void ICACHE_RAM_ATTR doEncoderPush(void);        			// interrupt for push button
 
 };
+#endif

@@ -1,4 +1,11 @@
+/*
+  beRotary.cpp - Library for ROTARY ENCODER FOR MENU
+  Created by Boris Emchenko.
+*/
+
+#include "Arduino.h"
 #include "beRotary.h"
+
 
   // mandatory for static fields
   volatile boolean rotaryClass::rotatingA;              
@@ -6,14 +13,40 @@
 
   uint8_t rotaryClass::encoderPushPin;
   volatile boolean rotaryClass::button_Active;
-  volatile unsigned long rotaryClass::button_Timer;  
+  volatile boolean rotaryClass::button_Press;
   volatile boolean rotaryClass::button_Release;
+  volatile unsigned long rotaryClass::button_Timer;  
   boolean rotaryClass::button_longPressActive;
   
   /* 
    * Constructor, simple form 
    */
   rotaryClass::rotaryClass() {
+    init();    
+  }
+
+  /* 
+   * Constructor -> encoder pin initialization
+   */
+  rotaryClass::rotaryClass(uint8_t pinA, uint8_t pinB) {
+    init();    
+    setInterrupt(pinA, pinB);
+  }
+
+  /* 
+   * Constructor -> encoder pin & push pin initialization
+   */
+  rotaryClass::rotaryClass(uint8_t pinA, uint8_t pinB, uint8_t pushPin) {
+    init();    
+    setInterrupt(pinA, pinB, pushPin);
+  }
+
+  /*
+   * Init variables for constructors
+   */
+  void rotaryClass::init(void) {
+    debugOutput = false;
+    
     rotatingA = false;
     rotatingAStarts = 0;
     
@@ -22,28 +55,18 @@
     lastIncTime = 0;
 
     button_Active = false;
+    button_Press = false;
     button_Release = false;
     button_longPressActive = false;
     button_short_press = false;
     button_long_press = false;
 
     button_Timer = 0;
-  }
 
-  /* 
-   * Constructor -> encoder pin initialization
-   */
-  rotaryClass::rotaryClass(uint8_t pinA, uint8_t pinB) {
-    rotaryClass();
-    setInterrupt(pinA, pinB);
-  }
-
-  /* 
-   * Constructor -> encoder pin & push pin initialization
-   */
-  rotaryClass::rotaryClass(uint8_t pinA, uint8_t pinB, uint8_t pushPin) {
-    rotaryClass();
-    setInterrupt(pinA, pinB, pushPin);
+    RotaryDebounceInterval  = ROTARY_DEBOUNCE_INTERVAL_DEFAULT;
+    RotarySpeedLimit        = ROTARY_SPEEDLIMIT_INTERVAL_DEFAULT;
+    ButtonDebounceInterval  = BUTTON_DEBOUNCE_DELAY_DEFAULT;
+    ButtonLongpressInterval = BUTTON_LONGPRESS_DELAY_DEFAULT;
   }
 
   /* 
@@ -74,6 +97,16 @@
     attachInterrupt(digitalPinToInterrupt (encoderPushPin), doEncoderPush, CHANGE); 
   }
 
+  /* 
+   * setParameters-> change defalut parameters
+   */  
+   void rotaryClass::setParameters(unsigned long  RotaryDebounce, unsigned long  SpeedLimit, unsigned long ButtonDebounce, unsigned long ButtonLongpress) {
+      RotaryDebounceInterval = RotaryDebounce;
+      RotarySpeedLimit = SpeedLimit;
+      ButtonDebounceInterval = ButtonDebounce;
+      ButtonLongpressInterval = ButtonLongpress;
+  }
+
   /*
    *  checkEncoder
    *  poll this function in loop to get current encoder position
@@ -86,7 +119,7 @@
     int ret = 0;
     if (rotatingA) {
       int dir = 0;
-      if ( millis() - rotatingAStarts > DEBOUNCE_INTERVAL) {
+      if ( millis() - rotatingAStarts > RotaryDebounceInterval) {
         // When signal changes we wait 2 milliseconds for it to
         // stabilise before reading 
         // (increase this value if there still bounce issues)
@@ -96,7 +129,7 @@
         else {
           dir = -1;
         }
-        if (millis() - lastIncTime > SPEEDLIMIT_INTERVAL) {
+        if (millis() - lastIncTime > RotarySpeedLimit) {
            encoderPos+=dir;
            lastIncTime = millis();
            ret = dir;
@@ -117,14 +150,23 @@
    */
   int rotaryClass::checkButton() {
       int ret = 0;
+      
+      if (button_Press) {
+        //Если кнопка была только что нажата, очистить все предыдущие события
+        button_long_press = false;
+        button_short_press = false;
+        button_longPressActive = false;
+        button_Press = false;
+      }
+      
       if (button_Active) {
         //Все еще нажата? проверяем таймер - не пора ли уже переходить на длинное нажатие? 
         //(только если не был до этого флаг уже взведен)
-        if ((millis() - button_Timer > BUTTON_LONGPRESS_DELAY) && (button_longPressActive == false)) {
+        if ((millis() - button_Timer > ButtonLongpressInterval) && (button_longPressActive == false)) {
           button_longPressActive = true;
         
           /* ЗАПУСКАЕМ СОБЫТИЕ ПО ДЛИННОМУ НАЖАТИЮ */
-          Serial.println(F("<BUTTON 1: long press>"));
+          if (debugOutput) Serial.println(F("<BUTTON 1: long press>"));
           button_long_press = true;
           ret = 2;
         }
@@ -137,14 +179,14 @@
           button_Timer = millis();
         } else {
           //Debounce check
-          if (millis() - button_Timer > BUTTON_DEBOUNCE_DELAY){
+          if (millis() - button_Timer > ButtonDebounceInterval){
             /* ЗАПУСКАЕМ СОБЫТИЕ ПО КОРОТКОМУ НАЖАТИЮ */
-            Serial.println(F("<BUTTON 1: short press>"));
+            if (debugOutput) Serial.println(F("<BUTTON 1: short press>"));
             button_short_press = true;
             ret = 1;
           }else{
             /* это дребезг */
-            //Serial.println("дребезг");
+            if (debugOutput) Serial.println("дребезг");
           }
         }
         button_Release = false;
@@ -152,6 +194,9 @@
       return ret;
   }
 
+  /*
+   * INTERRUPT FUNCTION - for rotating encoder, channel A
+   */
   void ICACHE_RAM_ATTR rotaryClass::doEncoderA(void) {
     if (!rotatingA) rotatingAStarts = millis();
     rotatingA = true;
@@ -160,12 +205,16 @@
   }
 
   
+  /*
+   * INTERRUPT FUNCTION - for push button
+   */
   void ICACHE_RAM_ATTR rotaryClass::doEncoderPush(void) {
     //Если до этого не была нажата, ставим флаг "нажата" и запускаем отчет таймера
     if (!button_Active && digitalRead(encoderPushPin) == LOW) 
     {
       button_Timer = millis();
       button_Active = true;
+      button_Press = true;
       //Serial.println("push");
     }
     else if (button_Active && digitalRead(encoderPushPin) == HIGH)

@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For beRotary
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+rotaryClass	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+setInterrupt	KEYWORD2
+checkEncoder	KEYWORD2
+checkButton	KEYWORD2
+setParameters	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+ROTARY_DEBOUNCE_INTERVAL_DEFAULT	LITERAL1
+ROTARY_SPEEDLIMIT_INTERVAL_DEFAULT	LITERAL1
+BUTTON_DEBOUNCE_DELAY_DEFAULT	LITERAL1
+BUTTON_LONGPRESS_DELAY_DEFAULT	LITERAL1
