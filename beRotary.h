@@ -13,6 +13,8 @@
    turning on the pull-ups saves having to hook up resistors
    to the A & B channel outputs
  * ****************************************************************************************************************
+ * v 2.0B [2021/02/26]
+ *  - debug output for encoder position
  * v 2.0A [2021/02/22]
  *  - many many bugfixes
  *  - set parameters method

@@ -133,6 +133,9 @@
            encoderPos+=dir;
            lastIncTime = millis();
            ret = dir;
+           if (debugOutput) Serial.print(F("<ENCODER POS: "));
+           if (debugOutput) Serial.print(encoderPos);
+           if (debugOutput) Serial.println(F(">"));
         }
         rotatingA = false; // Reset the flag back to false
       }
